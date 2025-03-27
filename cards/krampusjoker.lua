@@ -4,7 +4,7 @@ SMODS.Joker {
         name = "Krampus",
         text = {
             "When {C:attention}purchasing{} from the Shop,",
-            "this Joker gains {X:mult,C:white}X#2#{} Mult",
+            "this Joker has a {C:green}1/2{} chance to gain {X:mult,C:white}X#2#{} Mult",
             "{s:0.33} ",
             "{C:red,E:2}Items cost {C:money}$#1#{C:red,E:2} more",
             "{C:inactive}(Currently {X:mult,C:white}X#3#{C:inactive} Mult)"
@@ -15,11 +15,11 @@ SMODS.Joker {
     blueprint_compat = true,
     eternal_compat = false,
     perishable_compat = true,
-    config = { extra = { x_mult = 1, mult_gain = 0.1, inflation = 2 } },
+    config = { extra = { x_mult = 1, mult_gain = 0.1, inflation = 2, odds = 2 } },
     rarity = 3,
     atlas = "JJPack",
     pos = { x = 1, y = 0 },
-    cost = 8,
+    cost = 6,
     loc_vars = function(self, info_queue, card)
         return {
             vars = { card.ability.extra.inflation, card.ability.extra.mult_gain, card.ability.extra.x_mult }
@@ -28,7 +28,7 @@ SMODS.Joker {
     add_to_deck = function(self, card, from_debuff)
         G.GAME.inflation = G.GAME.inflation + card.ability.extra.inflation
         for k, v in pairs(G.I.CARD) do
-            if v.set_cost and v ~= card then
+            if v.set_cost then
                 v:set_cost()
             end
         end
@@ -43,13 +43,15 @@ SMODS.Joker {
     end,
     calculate = function(self, card, context)
         if (context.buying_card or (context.open_booster and not context.card.from_tag)) and not context.blueprint and context.card ~= card then
-            card.ability.extra.x_mult = card.ability.extra.x_mult + card.ability.extra.mult_gain
-            card_eval_status_text(card, 'extra', nil, nil, nil,
-                {
-                    message = localize('k_upgrade_ex'),
-                    colour = G.C.MULT
-                }
-            )
+            if pseudorandom('krampus') <= 1 / card.ability.extra.odds then
+                card.ability.extra.x_mult = card.ability.extra.x_mult + card.ability.extra.mult_gain
+                card_eval_status_text(card, 'extra', nil, nil, nil,
+                    {
+                        message = localize('k_upgrade_ex'),
+                        colour = G.C.MULT
+                    }
+                )
+            end
         end
 
         if context.joker_main and card.ability.extra.x_mult ~= 1 then
